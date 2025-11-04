@@ -357,7 +357,7 @@ orderForm.addEventListener('submit', async (e) => {
   }
 
   try {
-    const res = await fetch(APPS_SCRIPT_URL, {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxX8aAGEkt-uGzXnvWebktS7Qk_V-3EeLiN31e4ODwsTZmF1S2VpmEpE1sbzVP4OPso/exec', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -385,3 +385,4 @@ function showResult(ok, text) {
 </script>
 </body>
 </html>
+
