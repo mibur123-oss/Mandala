@@ -264,7 +264,7 @@ auth.onAuthStateChanged(user => {
 async function loadMenu() {
   menuStatus.textContent = 'Načítám jídelníček…';
   try {
-    const res = await fetch(APPS_SCRIPT_URL);
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxX8aAGEkt-uGzXnvWebktS7Qk_V-3EeLiN31e4ODwsTZmF1S2VpmEpE1sbzVP4OPso/exec');
     if (!res.ok) throw new Error('Chyba síťového požadavku');
     const data = await res.json();
     if (data.error) {
@@ -385,4 +385,5 @@ function showResult(ok, text) {
 </script>
 </body>
 </html>
+
 
