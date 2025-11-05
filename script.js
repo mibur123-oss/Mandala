@@ -1,64 +1,75 @@
-/* ======== UI elementy ======== */
+/* ====== PLACEHOLDERS ====== */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/TVUJ_APPS_SCRIPT_URL/exec";
+
+/* UI elementy */
 const typSelect = document.getElementById('typSelect');
-const mainDishDiv = document.getElementById('mainDishDiv');
-const whichMain = document.getElementById('whichMain');
-const portionCount = document.getElementById('portionCount');
-const btnAddOrder = document.getElementById('btnAddOrder');
-const orderList = document.getElementById('orderList');
-const orderForm = document.getElementById('orderForm');
-const addressLabel = document.getElementById('addressLabel');
-const addressInput = document.getElementById('addressInput');
-const status = document.getElementById('status');
-const resultMsg = document.getElementById('resultMsg');
+const whichMainLabel = document.getElementById('whichHalfLabel'); // využijeme pro hlavní jídlo
+const whichMain = document.getElementById('whichHalf');
+const portionCount = document.getElementById('portionCount'); // nový input pro počet porcí
+const btnAddOrder = document.getElementById('btnAddOrder'); // tlačítko Přidat do objednávky
+const orderList = document.getElementById('orderList'); // div seznamu objednávek
 const btnSubmit = document.getElementById('btnSubmit');
 
-/* Pole pro více objednávek */
+let priceMap = {};
 let orders = [];
 
-/* ======== UI logika ======== */
+/* ====== Načtení cen z Google Sheets ====== */
+async function loadPrices() {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + '?type=prices');
+    if (!res.ok) throw new Error('Chyba síťového požadavku');
+    const data = await res.json();
+    priceMap = data;
+  } catch(err) {
+    console.error("Chyba při načítání cen: ", err);
+  }
+}
+loadPrices();
+
+/* ====== UI logika pro typ menu ====== */
 typSelect.addEventListener('change', () => {
   const t = typSelect.value;
-  mainDishDiv.classList.toggle('hidden', !(t === 'cele' || t === 'polovicni' || t === 'jidlo'));
+  if (t === 'Poloviční menu' || t === 'Jídlo' || t === 'Půl + půl') {
+    whichMainLabel.classList.remove('hidden');
+  } else {
+    whichMainLabel.classList.add('hidden');
+  }
 });
 
-/* Adresa při doručení */
-document.querySelectorAll('input[name="delivery"]').forEach(inp => {
-  inp.addEventListener('change', () => {
-    const v = document.querySelector('input[name="delivery"]:checked').value;
-    addressLabel.classList.toggle('hidden', v !== 'Přivézt');
-    addressInput.required = v === 'Přivézt';
-  });
-});
-
-/* Přidání objednávky do seznamu */
+/* ====== Přidání do seznamu objednávek ====== */
 btnAddOrder.addEventListener('click', () => {
   const typ = typSelect.value;
-  if (!typ) {
-    alert("Vyber typ menu!");
-    return;
-  }
+  if (!typ) return alert("Vyber typ menu!");
+  
   let mainDish = null;
-  let portions = parseInt(portionCount.value);
-  if (typ === 'cele' || typ === 'polovicni' || typ === 'jidlo') {
+  if (typ === 'Poloviční menu' || typ === 'Jídlo' || typ === 'Půl + půl') {
     mainDish = whichMain.value;
-    if (portions < 1) {
-      alert("Zadej počet porcí!");
-      return;
-    }
+    if (!mainDish) return alert("Vyber hlavní jídlo!");
   }
 
-  orders.push({ typ, mainDish, portions });
+  const portions = parseInt(portionCount.value);
+  if (isNaN(portions) || portions < 1) return alert("Zadej počet porcí!");
+
+  let cena = 0;
+  if (typ === 'Celé menu') cena = priceMap["Celé menu"] * portions;
+  else if (typ === 'Poloviční menu') cena = priceMap["Poloviční"] * portions;
+  else if (typ === 'Jídlo') cena = priceMap[mainDish] * portions;
+  else if (typ === 'Půl + půl') cena = priceMap["Hlavní 1"] * portions + priceMap["Hlavní 2"] * portions;
+
+  orders.push({ typ, mainDish, portions, cena });
   renderOrderList();
 });
 
-/* Render seznamu objednávek */
+/* ====== Render seznamu objednávek ====== */
 function renderOrderList() {
   orderList.innerHTML = '';
+  let total = 0;
   orders.forEach((o, idx) => {
+    total += o.cena;
     const div = document.createElement('div');
     div.className = 'menu-item';
     div.innerHTML = `
-      ${o.typ}${o.mainDish ? ' — ' + o.mainDish : ''} x ${o.portions}
+      ${o.typ}${o.mainDish ? ' — ' + o.mainDish : ''} x ${o.portions} = ${o.cena} Kč
       <button type="button" data-idx="${idx}" style="float:right">❌</button>
     `;
     orderList.appendChild(div);
@@ -69,27 +80,29 @@ function renderOrderList() {
       renderOrderList();
     });
   });
+
+  const totalDiv = document.createElement('div');
+  totalDiv.className = 'menu-item';
+  totalDiv.style.fontWeight = 'bold';
+  totalDiv.textContent = 'Celkem: ' + total + ' Kč';
+  orderList.appendChild(totalDiv);
 }
 
-/* ======== Odeslání všech objednávek ======== */
+/* ====== Odeslání všech objednávek ====== */
 orderForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (orders.length === 0) {
-    alert("Přidej nejméně jednu objednávku!");
-    return;
-  }
+  if (orders.length === 0) return alert("Nemáš žádnou položku v objednávce!");
+  
+  const payload = {
+    name: nameInput.value.trim(),
+    email: emailInput.value.trim(),
+    doruceni: document.querySelector('input[name="delivery"]:checked').value,
+    adresa: addressInput.value.trim(),
+    orders
+  };
 
   btnSubmit.disabled = true;
   btnSubmit.textContent = 'Odesílám…';
-  resultMsg.classList.add('hidden');
-
-  const payload = {
-    name: document.getElementById('nameInput').value.trim(),
-    email: document.getElementById('emailInput').value.trim(),
-    doruceni: document.querySelector('input[name="delivery"]:checked').value,
-    adresa: addressInput.value.trim(),
-    objednavky: orders
-  };
 
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
@@ -98,18 +111,14 @@ orderForm.addEventListener('submit', async (e) => {
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Server vrátil chybu');
-    resultMsg.textContent = '✅ Objednávky byly odeslány. Děkujeme!';
-    resultMsg.className = 'msg ok';
+    alert("✅ Objednávka byla odeslána!");
     orders = [];
     renderOrderList();
-    orderForm.reset();
-    mainDishDiv.classList.add('hidden');
   } catch (err) {
-    resultMsg.textContent = 'Chyba při odesílání: ' + err.message;
-    resultMsg.className = 'msg err';
+    alert('Chyba při odesílání: ' + err.message);
   } finally {
-    resultMsg.classList.remove('hidden');
     btnSubmit.disabled = false;
     btnSubmit.textContent = 'Odeslat objednávku';
   }
 });
+
