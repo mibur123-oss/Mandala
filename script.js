@@ -68,18 +68,33 @@ auth.onAuthStateChanged(user => {
 /* ========== Načtení celého týdne z Google Sheets ========== */
 let weekMenu = [];
 
-async function loadWeekMenu(){
-  menuContainer.innerHTML = 'Načítám…';
+/* Načtení jídelníčku týdne */
+async function loadWeekMenu() {
+  const weekDaysDiv = document.getElementById('weekDays');
   try {
-    const res = await fetch(APPS_SCRIPT_URL);
-    if(!res.ok) throw new Error('Chyba sítě');
-    const data = await res.json();
-    weekMenu = data.week; // očekává se pole objektů: {date, day, polevka, jidlo1, jidlo2, ceny}
-    renderDaysTabs();
-    renderMenuForDay(0);
-  } catch(err){
-    menuContainer.textContent = 'Chyba při načítání menu: ' + err.message;
+    const res = await fetch(APPS_SCRIPT_WEEK_URL);
+    if (!res.ok) throw new Error('Chyba síťového požadavku');
+    const weekData = await res.json(); // očekáváme pole objektů {date, polevka, jidlo1, jidlo2}
+
+    weekData.forEach(day => {
+      const btn = document.createElement('button');
+      btn.textContent = `${day.date} (${day.dayName})`;
+      btn.addEventListener('click', () => selectDay(day));
+      weekDaysDiv.appendChild(btn);
+    });
+  } catch (err) {
+    weekDaysDiv.textContent = 'Chyba při načítání menu: ' + err.message;
   }
+}
+
+/* Aktivace dne a zobrazení menu */
+function selectDay(day) {
+  document.getElementById('selectedMenu').style.display = 'block';
+  document.getElementById('menuPolevka').textContent = day.polevka || '-';
+  document.getElementById('menuJidlo1').textContent = day.jidlo1 || '-';
+  document.getElementById('menuJidlo2').textContent = day.jidlo2 || '-';
+  document.getElementById('menuDate').textContent = day.date;
+  // TODO: uložit vybraný den pro objednávku
 }
 
 /* ========== Render karet dnů ========== */
