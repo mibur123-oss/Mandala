@@ -69,21 +69,39 @@ auth.onAuthStateChanged(user => {
 let weekMenu = [];
 
 /* Načtení jídelníčku týdne */
-async function loadWeekMenu() {
-  const weekDaysDiv = document.getElementById('weekDays');
-  try {
-    const res = await fetch(APPS_SCRIPT_WEEK_URL);
-    if (!res.ok) throw new Error('Chyba síťového požadavku');
-    const weekData = await res.json(); // očekáváme pole objektů {date, polevka, jidlo1, jidlo2}
+const APPS_SCRIPT_URL = "TVŮJ_APPS_SCRIPT_URL"; // nahraď vlastním URL
 
-    weekData.forEach(day => {
-      const btn = document.createElement('button');
-      btn.textContent = `${day.date} (${day.dayName})`;
-      btn.addEventListener('click', () => selectDay(day));
-      weekDaysDiv.appendChild(btn);
+const dayCards = document.getElementById('dayCards');
+
+async function loadMenuWeek() {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    if (!res.ok) throw new Error('Chyba síťového požadavku');
+    const data = await res.json();
+
+    // předpoklad: data = [{date:"3.11.2025", dayName:"pondělí", polevka:"...", jidlo1:"...", jidlo2:"..."}, ...]
+    dayCards.innerHTML = ''; // vyčistit předchozí karty
+
+    data.forEach(day => {
+      const card = document.createElement('div');
+      card.className = 'day-card';
+
+      card.innerHTML = `
+        <div class="day-header">
+          <span>${day.dayName} — ${day.date}</span>
+          <!-- TODO: tlačítko smazat kartu, později -->
+        </div>
+        <div class="menu-item"><strong>Polévka:</strong> ${day.polevka || '-'}</div>
+        <div class="menu-item"><strong>Hlavní 1:</strong> ${day.jidlo1 || '-'}</div>
+        <div class="menu-item"><strong>Hlavní 2:</strong> ${day.jidlo2 || '-'}</div>
+        <!-- TODO: zde bude výběr typu menu a počet porcí -->
+      `;
+
+      dayCards.appendChild(card);
     });
+
   } catch (err) {
-    weekDaysDiv.textContent = 'Chyba při načítání menu: ' + err.message;
+    dayCards.innerHTML = `<div class="day-card" style="color:red;">Chyba při načítání menu: ${err.message}</div>`;
   }
 }
 
