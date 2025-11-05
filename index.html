@@ -1,7 +1,7 @@
 <form id="orderForm" class="card" autocomplete="off" style="margin-top:14px">
   <h3>Objednávka</h3>
 
-  <label>Jméno (z profilu nebo zadej):
+  <label>Jméno:
     <input type="text" id="nameInput" placeholder="Jméno" required>
   </label>
 
@@ -10,34 +10,33 @@
   </label>
 
   <label>Typ menu:
-    <select id="typSelect">
-      <option value="">-- vyber --</option>
-      <option value="cele">Celé menu (polévka + hlavní jídlo)</option>
-      <option value="polovicni">Poloviční menu (polévka + půlka hlavního)</option>
-      <option value="půlpůl">Půl + půl (půlka Jídlo1 + půlka Jídlo2)</option>
-      <option value="jidlo">Jídlo (jen hlavní)</option>
-      <option value="polevka">Polévka (jen polévka)</option>
+    <select id="typSelect" required>
+      <option value="">-- Vyber --</option>
+      <option value="Celé menu">Celé menu</option>
+      <option value="Poloviční menu">Poloviční menu</option>
+      <option value="Půl + půl">Půl + půl</option>
+      <option value="Jídlo">Hlavní jídlo</option>
+      <option value="Polévka">Polévka</option>
     </select>
   </label>
 
-  <div id="mainDishDiv" class="hidden">
-    <label>Vyber hlavní jídlo:
-      <select id="whichMain">
-        <option value="jidlo1">Jídlo 1</option>
-        <option value="jidlo2">Jídlo 2</option>
-      </select>
-    </label>
+  <label id="whichHalfLabel" class="hidden">Hlavní jídlo:
+    <select id="whichHalf">
+      <option value="">-- Vyber --</option>
+      <option value="Hlavní 1">Hlavní 1</option>
+      <option value="Hlavní 2">Hlavní 2</option>
+    </select>
+  </label>
 
-    <label>Počet porcí:
-      <input type="number" id="portionCount" value="1" min="1">
-    </label>
+  <label>Počet porcí:
+    <input type="number" id="portionCount" min="1" value="1">
+  </label>
 
-    <button type="button" id="btnAddOrder" class="primary">Přidat do seznamu</button>
-  </div>
+  <button type="button" id="btnAddOrder" class="primary" style="margin-top:10px">Přidat do objednávky</button>
 
-  <div id="orderList" style="margin-top:10px"></div>
+  <div id="orderList" style="margin-top:14px"></div>
 
-  <label style="margin-top:10px">Doručení:
+  <label>Doručení:
     <div class="inline" style="margin-top:6px">
       <label><input type="radio" name="delivery" value="Vyzvednu" checked> Vyzvednu</label>
       <label style="margin-left:10px"><input type="radio" name="delivery" value="Přivézt"> Přivézt</label>
