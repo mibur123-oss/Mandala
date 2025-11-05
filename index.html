@@ -30,49 +30,11 @@
   @keyframes rot{to{transform:rotate(360deg)}}
   @media (max-width:880px){ .grid{grid-template-columns:1fr} .auth-buttons{flex-wrap:wrap} }
 </style>
+
 <!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDR9pvalNCGqW2JbWTLQtX_F5kHmnV41o8",
-    authDomain: "mandala-b29bc.firebaseapp.com",
-    projectId: "mandala-b29bc",
-    storageBucket: "mandala-b29bc.firebasestorage.app",
-    messagingSenderId: "470548601967",
-    appId: "1:470548601967:web:52cd1477ab21ad2da6019a",
-    measurementId: "G-EX4WRJNF2C"
-  };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const provider = new firebase.auth.GoogleAuthProvider();
-
-  // Tlačítko pro přihlášení (např. s id="btnLogin")
-  document.getElementById("btnLogin").addEventListener("click", () => {
-    auth.signInWithPopup(provider)
-      .then(result => {
-        console.log("Přihlášen:", result.user);
-        document.getElementById("userInfo").textContent = "Přihlášen: " + result.user.displayName;
-      })
-      .catch(err => {
-        console.error("Chyba přihlášení:", err.message);
-      });
-  });
-
-  // Sleduj změnu stavu přihlášení
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      console.log("Uživatel přihlášen:", user.email);
-      document.getElementById("userInfo").textContent = "Přihlášen: " + user.displayName;
-    } else {
-      console.log("Nikdo není přihlášen.");
-      document.getElementById("userInfo").textContent = "Nepřihlášen";
-    }
-  });
-</script>
-  
-  
 </head>
 <body>
   <div class="container">
@@ -191,14 +153,8 @@
       <div class="small">© Jídelna — jednoduché objednávky</div>
     </footer>
   </div>
+
+<!-- odkaz na externí JS -->
 <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
