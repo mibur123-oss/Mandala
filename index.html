@@ -1,160 +1,57 @@
-<!doctype html>
-<html lang="cs">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Objednávky jídelny</title>
-<style>
-  :root{--maxw:900px;--accent:#2563eb}
-  body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial; background:#f7f8fb; margin:0; padding:20px; display:flex; justify-content:center}
-  .container{width:100%;max-width:var(--maxw);background:#fff;border-radius:12px;box-shadow:0 6px 30px rgba(20,20,50,0.06);padding:22px}
-  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  h1{margin:0;font-size:20px}
-  .user{font-size:14px;color:#444}
-  .auth-buttons{display:flex;gap:8px;}
-  button{cursor:pointer;padding:8px 12px;border-radius:8px;border:1px solid #e6e9ef;background:#fff}
-  button.primary{background:var(--accent);color:#fff;border-color:transparent}
-  .grid{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px}
-  .card{background:#fafbff;border-radius:10px;padding:14px;border:1px solid #f0f3ff}
-  label{display:block;margin-top:10px;font-size:14px}
-  input[type="text"], input[type="email"], select, textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #e2e6ef;margin-top:6px}
-  .inline{display:flex;gap:8px;align-items:center}
-  .small{font-size:13px;color:#666}
-  .menu-item{padding:10px;border-radius:8px;background:#fff;border:1px solid #eef2ff;margin-top:8px}
-  .hidden{display:none}
-  footer{margin-top:14px;text-align:right}
-  .msg{margin-top:12px;padding:10px;border-radius:8px}
-  .msg.ok{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
-  .msg.err{background:#ffefef;color:#611010;border:1px solid #ffd6d6}
-  .loader{display:inline-block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;border-right-color:transparent;animation:rot 1s linear infinite}
-  @keyframes rot{to{transform:rotate(360deg)}}
-  @media (max-width:880px){ .grid{grid-template-columns:1fr} .auth-buttons{flex-wrap:wrap} }
-</style>
+<form id="orderForm" class="card" autocomplete="off" style="margin-top:14px">
+  <h3>Objednávka</h3>
 
-<!-- Firebase scripts -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <label>Jméno (z profilu nebo zadej):
+    <input type="text" id="nameInput" placeholder="Jméno" required>
+  </label>
 
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div>
-        <h1>Jídelna — objednávky</h1>
-        <div class="small">Přihlášení + načtení jídelníčku z Google Sheets</div>
-      </div>
-      <div class="auth">
-        <div class="user" id="userDisplay">Nejsi přihlášen</div>
-        <div class="auth-buttons" id="authButtons">
-          <button id="btnGoogle">Přihlásit Google</button>
-          <button id="btnFacebook">Přihlásit Facebook</button>
-          <button id="btnEmail">Přihlásit e-mail</button>
-          <button id="btnSignOut" class="hidden">Odhlásit</button>
-        </div>
-        <div id="userInfo" class="small">Nepřihlášen</div>
-      </div>
-    </header>
+  <label>E-mail:
+    <input type="email" id="emailInput" placeholder="Email" required>
+  </label>
 
-    <div class="grid">
-      <div>
-        <div class="card">
-          <h3>Jídelníček</h3>
-          <div id="menuStatus" class="small">Načítám …</div>
-          <div id="menuBox" class="hidden">
-            <div class="menu-item"><strong>Polévka:</strong> <span id="menuPolevka"></span></div>
-            <div class="menu-item"><strong>Hlavní 1:</strong> <span id="menuJidlo1"></span></div>
-            <div class="menu-item"><strong>Hlavní 2:</strong> <span id="menuJidlo2"></span></div>
-            <div class="small" style="margin-top:8px">Datum: <span id="menuDate"></span></div>
-          </div>
-        </div>
+  <label>Typ menu:
+    <select id="typSelect">
+      <option value="">-- vyber --</option>
+      <option value="cele">Celé menu (polévka + hlavní jídlo)</option>
+      <option value="polovicni">Poloviční menu (polévka + půlka hlavního)</option>
+      <option value="půlpůl">Půl + půl (půlka Jídlo1 + půlka Jídlo2)</option>
+      <option value="jidlo">Jídlo (jen hlavní)</option>
+      <option value="polevka">Polévka (jen polévka)</option>
+    </select>
+  </label>
 
-        <form id="orderForm" class="card" autocomplete="off" style="margin-top:14px">
-          <h3>Objednávka</h3>
+  <div id="mainDishDiv" class="hidden">
+    <label>Vyber hlavní jídlo:
+      <select id="whichMain">
+        <option value="jidlo1">Jídlo 1</option>
+        <option value="jidlo2">Jídlo 2</option>
+      </select>
+    </label>
 
-          <label>Jméno (z profilu nebo zadej):
-            <input type="text" id="nameInput" placeholder="Jméno" required>
-          </label>
+    <label>Počet porcí:
+      <input type="number" id="portionCount" value="1" min="1">
+    </label>
 
-          <label>E-mail:
-            <input type="email" id="emailInput" placeholder="Email" required>
-          </label>
-
-          <div style="margin-top:10px">
-            <label class="small">Vyber položky (pro typy menu níže jsou validace):</label>
-            <div class="inline">
-              <label><input type="checkbox" id="chkPolevka"> Polévka</label>
-              <label style="margin-left:10px"><input type="checkbox" id="chkJidlo1"> Jídlo 1</label>
-              <label style="margin-left:10px"><input type="checkbox" id="chkJidlo2"> Jídlo 2</label>
-            </div>
-          </div>
-
-          <label>Typ menu:
-            <select id="typSelect">
-              <option value="Celé menu">Celé menu (polévka + 1 hlavní)</option>
-              <option value="Poloviční menu">Poloviční menu (polévka + poloviční porce hlavního)</option>
-              <option value="Půl + půl">Půl + půl (půlka Jídlo1 + půlka Jídlo2)</option>
-              <option value="Jídlo">Jídlo (jen hlavní)</option>
-              <option value="Polévka">Polévka (jen polévka)</option>
-            </select>
-          </label>
-
-          <label id="whichHalfLabel" class="hidden">Které hlavní (pro Poloviční menu)?
-            <select id="whichHalf">
-              <option value="jidlo1">Jídlo 1 (poloviční)</option>
-              <option value="jidlo2">Jídlo 2 (poloviční)</option>
-            </select>
-          </label>
-
-          <label style="margin-top:10px">Doručení:
-            <div class="inline" style="margin-top:6px">
-              <label><input type="radio" name="delivery" value="Vyzvednu" checked> Vyzvednu</label>
-              <label style="margin-left:10px"><input type="radio" name="delivery" value="Přivézt"> Přivézt</label>
-            </div>
-          </label>
-
-          <label id="addressLabel" class="hidden">Adresa (povinné při Přivézt):
-            <input type="text" id="addressInput" placeholder="Ulice, číslo, město">
-          </label>
-
-          <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
-            <button id="btnSubmit" class="primary" type="submit">Odeslat objednávku</button>
-            <div id="status" class="small"></div>
-          </div>
-
-          <div id="resultMsg" class="msg hidden"></div>
-        </form>
-      </div>
-
-      <div>
-        <div class="card">
-          <h3>Info / nápověda</h3>
-          <ul style="margin:8px 0 0 18px;">
-            <li>Pro přihlášení použij Google, Facebook nebo e-mail.</li>
-            <li>Jídelníček je načítán z Google Sheets (Apps Script GET).</li>
-            <li>Po odeslání se data uloží do Listu <code>Objednávky</code>.</li>
-            <li>Pokud zvolíš <em>Přivézt</em>, adresa je povinná.</li>
-          </ul>
-        </div>
-
-        <div class="card" style="margin-top:14px">
-          <h3>Administrace (poznámky)</h3>
-          <div class="small">
-            <ol>
-              <li>Nastav Apps Script (doGet pro menu, doPost pro objednávky) a publikuj jako Web App (Kdokoli).</li>
-              <li>V Firebase Auth povol Google, Facebook, Email/Password.</li>
-              <li>Pro Facebook: vytvoř FB App, vlož OAuth redirect URI do FB a client id atd. (viz Firebase docs).</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer>
-      <div class="small">© Jídelna — jednoduché objednávky</div>
-    </footer>
+    <button type="button" id="btnAddOrder" class="primary">Přidat do seznamu</button>
   </div>
 
-<!-- odkaz na externí JS -->
-<script src="script.js"></script>
-</body>
-</html>
+  <div id="orderList" style="margin-top:10px"></div>
+
+  <label style="margin-top:10px">Doručení:
+    <div class="inline" style="margin-top:6px">
+      <label><input type="radio" name="delivery" value="Vyzvednu" checked> Vyzvednu</label>
+      <label style="margin-left:10px"><input type="radio" name="delivery" value="Přivézt"> Přivézt</label>
+    </div>
+  </label>
+
+  <label id="addressLabel" class="hidden">Adresa (povinné při Přivézt):
+    <input type="text" id="addressInput" placeholder="Ulice, číslo, město">
+  </label>
+
+  <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+    <button id="btnSubmit" class="primary" type="submit">Odeslat objednávku</button>
+    <div id="status" class="small"></div>
+  </div>
+
+  <div id="resultMsg" class="msg hidden"></div>
+</form>
