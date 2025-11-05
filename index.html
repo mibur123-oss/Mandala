@@ -1,169 +1,59 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Objednávky jídelny</title>
-<link rel="stylesheet" href="styles.css">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jídelna — objednávky</title>
 <style>
-  :root {
-    --accent: #2563eb;
-    --card-bg: #fff;
-    --card-border: #f0f3ff;
-    --radius: 12px;
-  }
-
-  body {
-    font-family: Inter, system-ui, Arial, sans-serif;
-    background: #f7f8fb;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .container {
-    width: 100%;
-    max-width: 1000px;
-  }
-
-  header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-
-  h1 { margin: 0; font-size: 24px; }
-  .user { font-size: 14px; color: #444; }
-  .auth-buttons { display: flex; gap: 8px; }
-  button {
-    cursor: pointer;
-    padding: 10px 18px;
-    border-radius: var(--radius);
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-weight: 500;
-    transition: 0.2s;
-  }
-  button:hover { opacity: 0.9; }
-  button.small { padding: 6px 12px; font-size: 14px; }
-
-  .days-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-  .day-tab {
-    padding: 8px 14px;
-    border-radius: var(--radius);
-    background: #eef2ff;
-    cursor: pointer;
-  }
-  .day-tab.active { background: var(--accent); color: #fff; }
-
-  .menu-card, .order-card {
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    padding: 14px;
-    border: 1px solid var(--card-border);
-    margin-bottom: 14px;
-  }
-
-  .menu-card h3, .order-card h3 { margin-top: 0; }
-  .menu-item { margin: 6px 0; }
-
-  .order-items { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-
-  .order-item {
-    border: 1px solid #e2e6ef;
-    border-radius: var(--radius);
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .order-item div { display: flex; flex-direction: column; }
-
-  .order-item button.delete {
-    background: #ff4d4f;
-    border: none;
-    border-radius: var(--radius);
-    padding: 6px 12px;
-    color: #fff;
-    cursor: pointer;
-  }
-
-  .total-box {
-    font-weight: 600;
-    font-size: 16px;
-    margin-top: 10px;
-  }
-
-  .hidden { display: none; }
-
-  footer { margin-top: 20px; text-align: center; font-size: 13px; color: #666; }
+  /* Základní stylování containeru a karet */
+  body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f7f8fb; display:flex; justify-content:center; }
+  .container { max-width:900px; width:100%; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.05); padding:16px; margin-bottom:16px; }
+  .card-header { font-weight:bold; margin-bottom:10px; }
+  .cards-area { display:flex; flex-direction:column; gap:12px; }
+  button { padding:8px 12px; border-radius:12px; cursor:pointer; border:none; background:#2563eb; color:#fff; }
 </style>
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 </head>
 <body>
 <div class="container">
 
-  <header>
-    <div>
-      <h1>Jídelna — objednávky</h1>
-      <div class="user" id="userDisplay">Nepřihlášen</div>
-    </div>
-    <div class="auth-buttons" id="authButtons">
-      <button id="btnGoogle">Google</button>
-      <button id="btnFacebook">Facebook</button>
-      <button id="btnEmail">E-mail</button>
-      <button id="btnSignOut" class="hidden">Odhlásit</button>
-    </div>
-  </header>
-
-  <!-- Výběr dne -->
-  <div class="days-tabs" id="daysTabs"></div>
-
-  <!-- Menu dne -->
-  <div id="menuContainer"></div>
-
-  <!-- Objednávky -->
-  <div class="order-card">
-    <h3>Objednávka</h3>
-    <div>
-      <label>Jméno:
-        <input type="text" id="nameInput" placeholder="Jméno" required>
-      </label>
-    </div>
-    <div>
-      <label>Kontakt (email nebo telefon):
-        <input type="text" id="contactInput" placeholder="Email nebo telefon" required>
-      </label>
-    </div>
-
-    <div style="margin-top:10px;">
-      <label>Doručení:
-        <select id="deliverySelect">
-          <option value="Vyzvednu" selected>Vyzvednu</option>
-          <option value="Přivézt">Přivézt</option>
-        </select>
-      </label>
-    </div>
-
-    <div class="order-items" id="orderItems"></div>
-
-    <button id="btnAddItem" style="margin-top:10px;">Přidat položku</button>
-    <div class="total-box" id="totalBox">Celkem: 0 Kč</div>
-    <button id="btnSubmitOrder" style="margin-top:10px;">Odeslat objednávku</button>
-    <div id="orderStatus" class="small"></div>
+  <!-- Přihlášení -->
+  <div class="card" id="authCard">
+    <div class="card-header">Přihlášení</div>
+    <!-- TODO: Firebase Auth tlačítka -->
   </div>
 
-  <footer>
-    © Jídelna — jednoduché objednávky
-  </footer>
+  <!-- Výběr dne a jídelníček -->
+<div class="card" id="menuCard">
+  <div class="card-header">Jídelníček</div>
+  <div id="weekDays" style="display:flex; gap:8px; flex-wrap:wrap;">
+    <!-- TODO: Zde se budou generovat karty dnů -->
+  </div>
+  <div id="selectedMenu" style="margin-top:12px; display:none;">
+    <div><strong>Polévka:</strong> <span id="menuPolevka">-</span></div>
+    <div><strong>Hlavní 1:</strong> <span id="menuJidlo1">-</span></div>
+    <div><strong>Hlavní 2:</strong> <span id="menuJidlo2">-</span></div>
+    <div class="small">Datum: <span id="menuDate">-</span></div>
+  </div>
 </div>
 
+
+  <!-- Výběr typu menu a porcí -->
+  <div class="card" id="orderCard">
+    <div class="card-header">Objednávka</div>
+    <!-- TODO: Typ menu, počet porcí, doručení -->
+  </div>
+
+  <!-- Přehled objednávek -->
+  <div class="card" id="summaryCard">
+    <div class="card-header">Přehled objednávek</div>
+    <div class="cards-area" id="cardsArea">
+      <!-- TODO: Zde se budou generovat jednotlivé karty objednávek -->
+    </div>
+    <!-- TODO: Součet a odeslat objednávku -->
+  </div>
+
+</div>
 <script src="script.js"></script>
 </body>
 </html>
