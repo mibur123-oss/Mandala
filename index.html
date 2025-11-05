@@ -1,212 +1,169 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Objednávky jídelny</title>
+<link rel="stylesheet" href="styles.css">
 <style>
-:root{--accent:#2563eb;--bg:#f7f8fb;--card:#fff;--border:#e2e6ef}
-body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);display:flex;justify-content:center;padding:20px}
-.container{max-width:900px;width:100%}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-h1{margin:0;font-size:22px}
-.auth-buttons button{margin-left:6px;padding:6px 12px;border-radius:8px;border:none;cursor:pointer}
-button.primary{background:var(--accent);color:#fff}
-.card{background:var(--card);border-radius:10px;padding:14px;border:1px solid var(--border);margin-bottom:14px}
-.small{font-size:13px;color:#666}
-.menu-day{display:flex;gap:6px;margin-bottom:10px}
-.menu-day button{flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:#fff}
-.menu-day button.active{background:var(--accent);color:#fff}
-.order-card{border:1px solid var(--accent);border-radius:10px;padding:10px;margin-bottom:8px;background:#f0f4ff;position:relative}
-.order-card .remove-btn{position:absolute;top:6px;right:6px;background:red;color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer}
-.inline{display:flex;gap:8px;align-items:center}
-.hidden{display:none}
-footer{margin-top:12px;text-align:center;color:#666;font-size:13px}
-</style>
+  :root {
+    --accent: #2563eb;
+    --card-bg: #fff;
+    --card-border: #f0f3ff;
+    --radius: 12px;
+  }
 
+  body {
+    font-family: Inter, system-ui, Arial, sans-serif;
+    background: #f7f8fb;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1000px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  h1 { margin: 0; font-size: 24px; }
+  .user { font-size: 14px; color: #444; }
+  .auth-buttons { display: flex; gap: 8px; }
+  button {
+    cursor: pointer;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+    transition: 0.2s;
+  }
+  button:hover { opacity: 0.9; }
+  button.small { padding: 6px 12px; font-size: 14px; }
+
+  .days-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .day-tab {
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: #eef2ff;
+    cursor: pointer;
+  }
+  .day-tab.active { background: var(--accent); color: #fff; }
+
+  .menu-card, .order-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--card-border);
+    margin-bottom: 14px;
+  }
+
+  .menu-card h3, .order-card h3 { margin-top: 0; }
+  .menu-item { margin: 6px 0; }
+
+  .order-items { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+
+  .order-item {
+    border: 1px solid #e2e6ef;
+    border-radius: var(--radius);
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .order-item div { display: flex; flex-direction: column; }
+
+  .order-item button.delete {
+    background: #ff4d4f;
+    border: none;
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .total-box {
+    font-weight: 600;
+    font-size: 16px;
+    margin-top: 10px;
+  }
+
+  .hidden { display: none; }
+
+  footer { margin-top: 20px; text-align: center; font-size: 13px; color: #666; }
+</style>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-
 </head>
 <body>
 <div class="container">
 
-<header>
-  <div>
-    <h1>Jídelna — objednávky</h1>
-    <div class="small">Výběr menu a objednávky</div>
-  </div>
-  <div class="auth">
-    <span id="userDisplay" class="small">Nepřihlášen</span>
-    <div class="auth-buttons">
+  <header>
+    <div>
+      <h1>Jídelna — objednávky</h1>
+      <div class="user" id="userDisplay">Nepřihlášen</div>
+    </div>
+    <div class="auth-buttons" id="authButtons">
       <button id="btnGoogle">Google</button>
       <button id="btnFacebook">Facebook</button>
       <button id="btnEmail">E-mail</button>
       <button id="btnSignOut" class="hidden">Odhlásit</button>
     </div>
+  </header>
+
+  <!-- Výběr dne -->
+  <div class="days-tabs" id="daysTabs"></div>
+
+  <!-- Menu dne -->
+  <div id="menuContainer"></div>
+
+  <!-- Objednávky -->
+  <div class="order-card">
+    <h3>Objednávka</h3>
+    <div>
+      <label>Jméno:
+        <input type="text" id="nameInput" placeholder="Jméno" required>
+      </label>
+    </div>
+    <div>
+      <label>Kontakt (email nebo telefon):
+        <input type="text" id="contactInput" placeholder="Email nebo telefon" required>
+      </label>
+    </div>
+
+    <div style="margin-top:10px;">
+      <label>Doručení:
+        <select id="deliverySelect">
+          <option value="Vyzvednu" selected>Vyzvednu</option>
+          <option value="Přivézt">Přivézt</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="order-items" id="orderItems"></div>
+
+    <button id="btnAddItem" style="margin-top:10px;">Přidat položku</button>
+    <div class="total-box" id="totalBox">Celkem: 0 Kč</div>
+    <button id="btnSubmitOrder" style="margin-top:10px;">Odeslat objednávku</button>
+    <div id="orderStatus" class="small"></div>
   </div>
-</header>
 
-<div class="card">
-  <h3>Vyber den</h3>
-  <div class="menu-day" id="dayButtons"></div>
-  <div id="menuBox" class="hidden">
-    <div><strong>Polévka:</strong> <span id="menuPolevka"></span></div>
-    <div><strong>Hlavní 1:</strong> <span id="menuJidlo1"></span></div>
-    <div><strong>Hlavní 2:</strong> <span id="menuJidlo2"></span></div>
-    <div class="small">Datum: <span id="menuDate"></span></div>
-  </div>
+  <footer>
+    © Jídelna — jednoduché objednávky
+  </footer>
 </div>
 
-<div class="card">
-  <h3>Nová objednávka</h3>
-  <label>Typ menu:
-    <select id="typSelect">
-      <option value="">Vyber typ</option>
-      <option value="Celé menu">Celé menu</option>
-      <option value="Poloviční menu">Poloviční menu</option>
-      <option value="Půl+Půl menu">Půl+Půl menu</option>
-      <option value="Hlavní jídlo">Hlavní jídlo</option>
-      <option value="Poloviční hlavní">Poloviční hlavní</option>
-      <option value="Polévka">Polévka</option>
-    </select>
-  </label>
-  <div id="selectJidlo" class="hidden">
-    <label>Vyber hlavní jídlo: 
-      <select id="whichMain">
-        <option value="jidlo1">Hlavní 1</option>
-        <option value="jidlo2">Hlavní 2</option>
-      </select>
-    </label>
-  </div>
-  <label>Počet porcí:
-    <input type="number" id="pocetPorci" value="1" min="1" style="width:60px">
-  </label>
-  <button id="addOrder" class="primary" style="margin-top:8px">Přidat do objednávky</button>
-</div>
-
-<div class="card">
-  <h3>Seznam objednávek</h3>
-  <div id="orderList"></div>
-  <div class="small">Celkem: <span id="totalSum">0</span> Kč</div>
-  <button id="btnSubmit" class="primary" style="margin-top:8px">Odeslat objednávku</button>
-</div>
-
-<footer>© Jídelna — jednoduché objednávky</footer>
-
-<script>
-const firebaseConfig = {
-    apiKey: "TVŮJ_API_KEY",
-    authDomain: "TVŮJ_PROJECT.firebaseapp.com",
-    projectId: "TVŮJ_PROJECT",
-    storageBucket: "TVŮJ_PROJECT.appspot.com",
-    messagingSenderId: "TVŮJ_MESSAGING",
-    appId: "TVŮJ_APP_ID"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
-const userDisplay = document.getElementById('userDisplay');
-const btnGoogle = document.getElementById('btnGoogle');
-const btnFacebook = document.getElementById('btnFacebook');
-const btnEmail = document.getElementById('btnEmail');
-const btnSignOut = document.getElementById('btnSignOut');
-
-btnGoogle.onclick = ()=>auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-btnFacebook.onclick = ()=>auth.signInWithPopup(new firebase.auth.FacebookAuthProvider());
-btnEmail.onclick = async ()=>{
-  const email = prompt("Email:"); if(!email) return;
-  const pass = prompt("Heslo:"); if(!pass) return;
-  try { await auth.signInWithEmailAndPassword(email,pass);} 
-  catch(e){ if(e.code==='auth/user-not-found') await auth.createUserWithEmailAndPassword(email,pass);}
-};
-btnSignOut.onclick = ()=>auth.signOut();
-auth.onAuthStateChanged(user=>{
-  if(user){userDisplay.textContent=user.displayName||user.email; btnSignOut.classList.remove('hidden'); btnGoogle.classList.add('hidden'); btnFacebook.classList.add('hidden'); btnEmail.classList.add('hidden');}
-  else{userDisplay.textContent='Nepřihlášen'; btnSignOut.classList.add('hidden'); btnGoogle.classList.remove('hidden'); btnFacebook.classList.remove('hidden'); btnEmail.classList.remove('hidden');}
-});
-
-// --- Menu dny ---
-const APPS_SCRIPT_URL = "TVŮJ_APPS_SCRIPT_URL";
-const dayButtons = document.getElementById('dayButtons');
-const menuBox = document.getElementById('menuBox');
-const menuPolevka = document.getElementById('menuPolevka');
-const menuJidlo1 = document.getElementById('menuJidlo1');
-const menuJidlo2 = document.getElementById('menuJidlo2');
-const menuDate = document.getElementById('menuDate');
-let menuData=[];
-
-// generování tlačítek dnů
-const days=['Po','Út','St','Čt','Pá'];
-days.forEach((d,i)=>{
-  const btn=document.createElement('button');
-  btn.textContent=d;
-  btn.onclick=()=>loadMenu(i);
-  dayButtons.appendChild(btn);
-});
-
-async function loadMenu(dayIndex){
-  menuBox.classList.add('hidden');
-  try{
-    const res=await fetch(APPS_SCRIPT_URL);
-    const data=await res.json();
-    menuData=data[dayIndex]; // předpokládáme pole objektů po dnech
-    menuPolevka.textContent=menuData.polevka;
-    menuJidlo1.textContent=menuData.jidlo1;
-    menuJidlo2.textContent=menuData.jidlo2;
-    menuDate.textContent=menuData.date;
-    menuBox.classList.remove('hidden');
-  }catch(e){console.error(e);}
-}
-
-// --- Objednávky ---
-const typSelect = document.getElementById('typSelect');
-const selectJidlo = document.getElementById('selectJidlo');
-const whichMain = document.getElementById('whichMain');
-const pocetPorci = document.getElementById('pocetPorci');
-const addOrder = document.getElementById('addOrder');
-const orderList = document.getElementById('orderList');
-const totalSum = document.getElementById('totalSum');
-const btnSubmit = document.getElementById('btnSubmit');
-
-let orders=[];
-
-typSelect.addEventListener('change',()=>{
-  const t = typSelect.value;
-  selectJidlo.classList.toggle('hidden',!(t==='Poloviční menu'||t==='Hlavní jídlo'||t==='Poloviční hlavní'||t==='Půl+Půl menu'));
-});
-
-addOrder.addEventListener('click',()=>{
-  const t=typSelect.value;
-  if(!t){alert('Vyber typ menu'); return;}
-  const poc=parseInt(pocetPorci.value)||1;
-  let which=t==='Hlavní jídlo'||t==='Poloviční hlavní'||t==='Poloviční menu'? whichMain.value:'';
-  const price = t==='Polévka'?40 : t==='Hlavní jídlo'?135 : t==='Poloviční hlavní'?115 : t==='Celé menu'?155 : t==='Poloviční menu'?115 : t==='Půl+Půl menu'?155:0;
-  const order={typ:t,which,porce:poc,price};
-  orders.push(order);
-  renderOrders();
-});
-
-function renderOrders(){
-  orderList.innerHTML='';
-  let total=0;
-  orders.forEach((o,i)=>{
-    const div=document.createElement('div');
-    div.className='order-card';
-    div.innerHTML=`${o.typ} ${o.which?'-'+o.which:''} x${o.porce} = ${o.price*o.porce} Kč
-    <button class="remove-btn" onclick="orders.splice(${i},1); renderOrders();">×</button>`;
-    orderList.appendChild(div);
-    total+=o.price*o.porce;
-  });
-  totalSum.textContent=total;
-}
-
-btnSubmit.addEventListener('click',()=>{
-  if(!orders.length){alert('Žádná objednávka'); return;}
-  alert('Objednávka odeslána!'); // sem vložit POST na Apps Script
-});
-</script>
-</div>
+<script src="script.js"></script>
 </body>
 </html>
