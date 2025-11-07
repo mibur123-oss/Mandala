@@ -112,50 +112,62 @@
   </div>
 
 <script>
-  // =======================
-  // JS kostra pro generování karet dnů
-  // =======================
+const daysContainer = document.getElementById('daysContainer');
+const menuPolevka = document.getElementById('menuPolevka');
+const menuJidlo1 = document.getElementById('menuJidlo1');
+const menuJidlo2 = document.getElementById('menuJidlo2');
+const menuDate = document.getElementById('menuDate');
 
-  const daysContainer = document.getElementById('daysContainer');
-  const menuPolevka = document.getElementById('menuPolevka');
-  const menuJidlo1 = document.getElementById('menuJidlo1');
-  const menuJidlo2 = document.getElementById('menuJidlo2');
-  const menuDate = document.getElementById('menuDate');
+// URL tvého Apps Script
+const APPS_SCRIPT_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjJ9fj0-9c85IDKw_8ow3XkONcRAFWDCdBmyC5cUuCliOAfAhzDL36XncCTjxZ6mqnJac6nOR0MKZze7aICYDYkWbGHifp50c7HaMPcWj1xB5SUtdQCYzumn_Lv3zqwPI8hoknO5_ENW0TivOVU82oqRjktXT_SCmoCb56EpL809kbnmcUw0ZVrrnbXZ7WA3PvB5deVwvuW3H5RRv-YLtgIrMlZ7iZ7TCdMMkr6IAQYFAUXnsEIxTLdJsw3Jrfww_ZsyXA6naLW1DjhhHrRdCxG-rNIOQ&lib=M8RSYmDm7iYILavaBqKQXX_LnOro48G--';
 
-  // ======== Příklad dat týdne (nahraď načtením z Apps Script) ========
-  const weekData = [
-    {date:"2025-11-03", dayName:"pondělí", polevka:"Kuřecí vývar", jidlo1:"Hovězí guláš", jidlo2:"Zeleninový rizoto"},
-    {date:"2025-11-04", dayName:"úterý", polevka:"Rajská polévka", jidlo1:"Kuřecí řízek", jidlo2:"Těstoviny s pestem"},
-    {date:"2025-11-05", dayName:"středa", polevka:"Kuřecí vývar", jidlo1:"Hovězí guláš", jidlo2:"Zeleninový rizoto"},
-    {date:"2025-11-06", dayName:"čtvrtek", polevka:"Rajská polévka", jidlo1:"Kuřecí řízek", jidlo2:"Těstoviny s pestem"},
-    {date:"2025-11-07", dayName:"pátek", polevka:"Kuřecí vývar", jidlo1:"Hovězí guláš", jidlo2:"Zeleninový rizoto"},
-  ];
+async function loadWeekMenu() {
+  daysContainer.innerHTML = '<div class="loader"></div>'; // indikátor načítání
+  try {
+    const res = await fetch(APPS_SCRIPT_URL);
+    if (!res.ok) throw new Error('Chyba síťového požadavku');
+    const data = await res.json();
+    
+    const weekData = data.week || [];
+    daysContainer.innerHTML = ''; // vyčistíme loader
 
-  // Generování karet dnů
-  weekData.forEach((day, index) => {
-    const card = document.createElement('div');
-    card.className = 'day-card';
-    card.dataset.index = index;
-    card.innerHTML = `${day.dayName}<br>${day.date}`;
-    daysContainer.appendChild(card);
+    if (weekData.length === 0) {
+      daysContainer.textContent = 'Menu nenalezeno.';
+      return;
+    }
 
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
-      card.classList.add('active');
+    // generování karet dnů
+    weekData.forEach((dayObj, index) => {
+      const day = dayObj.row;
+      const card = document.createElement('div');
+      card.className = 'day-card';
+      card.dataset.index = index;
+      card.innerHTML = `${day.dayName}<br>${new Date(day.date).toLocaleDateString('cs-CZ')}`;
+      daysContainer.appendChild(card);
 
-      // Zobrazení jídelníčku
-      menuPolevka.textContent = day.polevka || '–';
-      menuJidlo1.textContent = day.jidlo1 || '–';
-      menuJidlo2.textContent = day.jidlo2 || '–';
-      menuDate.textContent = day.date;
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+
+        // naplnění menu
+        menuPolevka.textContent = day.polevka || '–';
+        menuJidlo1.textContent = day.jidlo1 || '–';
+        menuJidlo2.textContent = day.jidlo2 || '–';
+        menuDate.textContent = new Date(day.date).toLocaleDateString('cs-CZ');
+      });
     });
-  });
 
-  // Aktivace první karty automaticky
-  if(weekData.length>0) {
+    // aktivace první karty
     daysContainer.querySelector('.day-card').click();
-  }
 
+  } catch (err) {
+    daysContainer.textContent = 'Chyba při načítání: ' + err.message;
+  }
+}
+
+loadWeekMenu();
 </script>
+
 </body>
 </html>
+
