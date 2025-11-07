@@ -1,5 +1,5 @@
 // ====== NAHRADIT: vlož sem URL svého Apps Script (web app) ======
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX8aAGEkt-uGzXnvWebktS7Qk_V-3EeLiN31e4ODwsTZmF1S2VpmEpE1sbzVP4OPso/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0FVY-pEdLocyqEElfUDRjhQ1BEPQVBj4DZ36ISCyHWuzKtallNZwjVOB3_MyzKC2J/exec";
 // ==================================================================
 
 const daysContainer = document.getElementById('daysContainer');
