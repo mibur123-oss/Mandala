@@ -47,6 +47,139 @@ function parseDateSafe(raw) {
   return s; // vrátíme raw jako fallback
 }
 
+
+function doGet(e) {
+  const SHEET_ID = '1IDhwRuo9Vkl_ltrWzPWiVva7k8F47wgvYZJxNF0q1Vc';
+  const MENU_SHEET_NAME = 'Menu';
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(MENU_SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+
+  const timeZone = Session.getScriptTimeZone();
+  const today = new Date();
+
+  // Najdeme pondělí aktuálního týdne
+  const dayOfWeek = today.getDay(); // 0 = neděle, 1 = pondělí ...
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7)); // posun na pondělí
+
+  // vytvoříme seznam dat pro pondělí–neděli
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDates.push(Utilities.formatDate(d, timeZone, 'd.M.yyyy'));
+  }
+
+  // vytvoříme výstupní pole
+  const menus = [];
+
+  // projdeme řádky tabulky
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const cell = row[0];
+    if (!cell) continue;
+
+    let cellDate;
+    if (cell instanceof Date) {
+      cellDate = Utilities.formatDate(cell, timeZone, 'd.M.yyyy');
+    } else {
+      // podpora textového formátu data
+      const parts = cell.toString().split(/[.\-/]/);
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        const d = new Date(year, month, day);
+        cellDate = Utilities.formatDate(d, timeZone, 'd.M.yyyy');
+      } else continue;
+    }
+
+    if (weekDates.includes(cellDate)) {
+      menus.push({
+        date: cellDate,
+        dayName: row[1],
+        polevka: row[2],
+        jidlo1: row[3],
+        jidlo2: row[4],
+      });
+    }
+  }
+
+  if (menus.length === 0) {
+    return ContentService.createTextOutput(JSON.stringify({ error: 'Menu not found for this week' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(menus))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  const SHEET_ID = '1IDhwRuo9Vkl_ltrWzPWiVva7k8F47wgvYZJxNF0q1Vc';
+  const MENU_SHEET_NAME = 'Menu';
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(MENU_SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+
+  const timeZone = Session.getScriptTimeZone();
+  const today = new Date();
+
+  // Najdeme pondělí aktuálního týdne
+  const dayOfWeek = today.getDay(); // 0 = neděle, 1 = pondělí ...
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7)); // posun na pondělí
+
+  // vytvoříme seznam dat pro pondělí–neděli
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDates.push(Utilities.formatDate(d, timeZone, 'd.M.yyyy'));
+  }
+
+  // vytvoříme výstupní pole
+  const menus = [];
+
+  // projdeme řádky tabulky
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const cell = row[0];
+    if (!cell) continue;
+
+    let cellDate;
+    if (cell instanceof Date) {
+      cellDate = Utilities.formatDate(cell, timeZone, 'd.M.yyyy');
+    } else {
+      // podpora textového formátu data
+      const parts = cell.toString().split(/[.\-/]/);
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        const d = new Date(year, month, day);
+        cellDate = Utilities.formatDate(d, timeZone, 'd.M.yyyy');
+      } else continue;
+    }
+
+    if (weekDates.includes(cellDate)) {
+      menus.push({
+        date: cellDate,
+        dayName: row[1],
+        polevka: row[2],
+        jidlo1: row[3],
+        jidlo2: row[4],
+      });
+    }
+  }
+
+  if (menus.length === 0) {
+    return ContentService.createTextOutput(JSON.stringify({ error: 'Menu not found for this week' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(menus))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 /** vytvoří kartu dne DOM element */
 function createDayCard(dayObj, index) {
   const el = document.createElement('div');
