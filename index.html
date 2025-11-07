@@ -1,43 +1,68 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Jídelníček — týdny</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jídelníček týdne</title>
 <style>
-  :root{--accent:#2563eb;--bg:#f7f8fb}
-  body{font-family:Inter,system-ui,Arial; background:var(--bg); margin:0; padding:20px; display:flex; justify-content:center}
-  .wrap{width:100%;max-width:980px}
-  h1{margin:0 0 14px 0;font-size:22px}
-  .days{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-  .day-card{background:#fff;padding:12px 14px;border-radius:10px;border:1px solid #e6eefc;cursor:pointer;min-width:120px;box-shadow:0 2px 8px rgba(20,30,60,0.03);transition:.12s}
-  .day-card:hover{transform:translateY(-3px)}
-  .day-card.active{background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 6px 18px rgba(37,99,235,0.12)}
-  .menu-frame{background:#fff;padding:14px;border-radius:10px;border:1px solid #e8eefc;min-height:120px}
-  .menu-row{margin:8px 0}
-  .muted{color:#667085;font-size:13px}
-  .error{color:#b91c1c}
-  .loader{display:inline-block;width:14px;height:14px;border:2px solid #fff;border-radius:50%;border-right-color:transparent;animation:rot 1s linear infinite;margin-left:8px}
-  @keyframes rot{to{transform:rotate(360deg)}}
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+  .day-cards { display: flex; gap: 10px; margin-bottom: 20px; }
+  .card { padding: 10px 15px; background: #fff; border-radius: 8px; cursor: pointer; border: 1px solid #ccc; }
+  .card.active { background: #d0e7ff; border-color: #2563eb; }
+  .menu-display { background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
+  .menu-item { margin-bottom: 8px; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Jídelníček — tento týden</h1>
 
-    <!-- Místo pro karty dnů -->
-    <div id="daysContainer" class="days">
-      <!-- dynamicky generované karty dnů -->
-    </div>
+<h1>Jídelníček týdne</h1>
 
-    <!-- Zde se zobrazí menu vybraného dne -->
-    <div id="menuFrame" class="menu-frame">
-      Klikni na kartu dne pro zobrazení jídelníčku.
-    </div>
+<div class="day-cards" id="dayCards">
+  <!-- Zde se v JS vykreslí karty dnů -->
+</div>
 
-    <div id="status" class="muted" style="margin-top:10px"></div>
-  </div>
+<div class="menu-display" id="menuDisplay">
+  <div class="menu-item"><strong>Polévka:</strong> <span id="menuPolevka">–</span></div>
+  <div class="menu-item"><strong>Hlavní 1:</strong> <span id="menuJidlo1">–</span></div>
+  <div class="menu-item"><strong>Hlavní 2:</strong> <span id="menuJidlo2">–</span></div>
+</div>
 
-  <script src="script.js"></script>
+<script>
+  // === Simulace dat z Google Sheets (ty pak nahradíš fetch z Apps Script) ===
+  const weekData = [
+    {"date":"2025-11-02T23:00:00.000Z","dayName":"pondělí","polevka":"Kuřecí vývar","jidlo1":"Hovězí guláš","jidlo2":"Zeleninový rizoto"},
+    {"date":"2025-11-03T23:00:00.000Z","dayName":"úterý","polevka":"Rajská polévka","jidlo1":"Kuřecí řízek","jidlo2":"Těstoviny s pestem"},
+    {"date":"2025-11-04T23:00:00.000Z","dayName":"středa","polevka":"Kuřecí vývar","jidlo1":"Hovězí guláš","jidlo2":"Zeleninový rizoto"},
+    {"date":"2025-11-05T23:00:00.000Z","dayName":"čtvrtek","polevka":"Rajská polévka","jidlo1":"Kuřecí řízek","jidlo2":"Těstoviny s pestem"},
+    {"date":"2025-11-06T23:00:00.000Z","dayName":"pátek","polevka":"Kuřecí vývar","jidlo1":"Hovězí guláš","jidlo2":"Zeleninový rizoto"}
+  ];
+
+  const dayCardsContainer = document.getElementById('dayCards');
+  const menuPolevka = document.getElementById('menuPolevka');
+  const menuJidlo1 = document.getElementById('menuJidlo1');
+  const menuJidlo2 = document.getElementById('menuJidlo2');
+
+  // Vykreslení karet dnů
+  weekData.forEach((day, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const dateObj = new Date(day.date);
+    card.textContent = `${day.dayName} (${dateObj.toLocaleDateString('cs-CZ')})`;
+    card.addEventListener('click', () => {
+      // zvýrazní vybranou kartu
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      // zobrazí jídelníček
+      menuPolevka.textContent = day.polevka || '–';
+      menuJidlo1.textContent = day.jidlo1 || '–';
+      menuJidlo2.textContent = day.jidlo2 || '–';
+    });
+    dayCardsContainer.appendChild(card);
+  });
+
+  // Volitelně: zobrazit první den automaticky
+  dayCardsContainer.firstChild.click();
+</script>
+
 </body>
 </html>
