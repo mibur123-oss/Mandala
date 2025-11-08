@@ -235,7 +235,7 @@ submitOrderBtn.addEventListener('click', async () => {
   try {
     const res = await fetch(APP_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', // 👈 přidat pro bezpečné odeslání bez CORS chyb
+      //mode: 'no-cors', // 👈 přidat pro bezpečné odeslání bez CORS chyb
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -253,5 +253,6 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
 
 
