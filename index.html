@@ -238,6 +238,7 @@ submitOrderBtn.addEventListener('click', async () => {
   try {
     const res = await fetch(APP_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -255,3 +256,4 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
