@@ -99,6 +99,7 @@ let priceList = {
 let activeDayIndex = null;
 let orders = [];
 
+// --- prvky ---
 const daysContainer = document.getElementById('daysContainer');
 const menuCard = document.getElementById('menuCard');
 const menuDayTitle = document.getElementById('menuDayTitle');
@@ -109,39 +110,82 @@ const menuTypeSelect = document.getElementById('menuTypeSelect');
 const selectMainLabel = document.getElementById('selectMainLabel');
 const selectMain = document.getElementById('selectMain');
 const portionCount = document.getElementById('portionCount');
-const addOrderBtn = document.getElementById('addOrderBtn');
 const orderList = document.getElementById('orderList');
 const totalPriceEl = document.getElementById('totalPrice');
 const submitOrderBtn = document.getElementById('submitOrderBtn');
-const deliverySelect = document.getElementById('deliverySelect');
-const addressLabel = document.getElementById('addressLabel');
-const addressInput = document.getElementById('addressInput');
-const userName = document.getElementById('userName');
-const userContact = document.getElementById('userContact');
+const ordersCard = document.getElementById('ordersCard');
 
-// --- LOCAL STORAGE ---
-window.addEventListener('load', () => {
-  const savedName = localStorage.getItem('userName');
-  if (savedName) userName.value = savedName;
-});
-userName.addEventListener('input', () => {
-  localStorage.setItem('userName', userName.value.trim());
+// --- finální karta (jméno, kontakt, doručení) ---
+const deliverySelect = document.createElement('select');
+deliverySelect.innerHTML = `
+  <option value="Vyzvednu">Vyzvednu</option>
+  <option value="Přivézt">Přivézt</option>
+`;
+const addressLabel = document.createElement('label');
+addressLabel.textContent = 'Adresa:';
+const addressInput = document.createElement('input');
+addressInput.type = 'text';
+addressInput.id = 'addressInput';
+addressInput.autocomplete = 'street-address';
+addressInput.placeholder = 'Ulice, číslo, město';
+addressLabel.appendChild(addressInput);
+
+const nameLabel = document.createElement('label');
+nameLabel.textContent = 'Jméno:';
+const nameInput = document.createElement('input');
+nameInput.type = 'text';
+nameInput.id = 'nameInput';
+nameInput.autocomplete = 'name';
+nameLabel.appendChild(nameInput);
+
+const contactLabel = document.createElement('label');
+contactLabel.textContent = 'Kontakt:';
+const contactInput = document.createElement('input');
+contactInput.type = 'tel';
+contactInput.id = 'contactInput';
+contactInput.autocomplete = 'tel';
+contactLabel.appendChild(contactInput);
+
+// Přidat do finální karty
+ordersCard.insertBefore(nameLabel, submitOrderBtn);
+ordersCard.insertBefore(contactLabel, submitOrderBtn);
+ordersCard.insertBefore(deliverySelect, submitOrderBtn);
+ordersCard.insertBefore(addressLabel, submitOrderBtn);
+
+// --- načtení uložených údajů ---
+nameInput.value = localStorage.getItem('name') || '';
+contactInput.value = localStorage.getItem('contact') || '';
+addressInput.value = localStorage.getItem('address') || '';
+deliverySelect.value = localStorage.getItem('delivery') || 'Vyzvednu';
+menuTypeSelect.value = localStorage.getItem('menuType') || 'Celé menu';
+
+// --- sledování změn a uložení ---
+[nameInput, contactInput, addressInput, deliverySelect, menuTypeSelect].forEach(el => {
+  el.addEventListener('change', () => {
+    localStorage.setItem('name', nameInput.value);
+    localStorage.setItem('contact', contactInput.value);
+    localStorage.setItem('address', addressInput.value);
+    localStorage.setItem('delivery', deliverySelect.value);
+    localStorage.setItem('menuType', menuTypeSelect.value);
+  });
 });
 
 // --- načtení menu týdne ---
 async function loadWeekMenu() {
+  daysContainer.innerHTML = '<p>Načítám jídelníček…</p>';
   try {
     const res = await fetch(APP_SCRIPT_URL);
-    if (!res.ok) throw new Error('Chyba síťového požadavku ' + res.status);
+    if (!res.ok) throw new Error('Chyba ' + res.status);
     const data = await res.json();
     weekMenu = data.week.filter((_, i) => i < 5);
     renderDayCards();
   } catch(err) {
-    console.error('Chyba při načítání menu týdne:', err);
+    daysContainer.innerHTML = '<p style="color:red;">Nepodařilo se načíst jídelníček.</p>';
+    console.error(err);
   }
 }
 
-// --- vykreslení karet dnů ---
+// --- vykreslení dnů ---
 function renderDayCards() {
   daysContainer.innerHTML = '';
   weekMenu.forEach((item, idx) => {
@@ -149,8 +193,8 @@ function renderDayCards() {
     const div = document.createElement('div');
     div.className = 'day-card';
     const date = new Date(day.date);
-    const formattedDate = date.toLocaleDateString('cs-CZ', { day:'2-digit', month:'2-digit' });
-    div.textContent = `${day.dayName} (${formattedDate})`;
+    const dateStr = `${date.getDate().toString().padStart(2,'0')}.${(date.getMonth()+1).toString().padStart(2,'0')}`;
+    div.textContent = `${day.dayName} (${dateStr})`;
     div.addEventListener('click', () => selectDay(idx));
     daysContainer.appendChild(div);
   });
@@ -159,33 +203,14 @@ function renderDayCards() {
 // --- výběr dne ---
 function selectDay(idx) {
   activeDayIndex = idx;
-  const cards = document.querySelectorAll('.day-card');
-  cards.forEach((c,i) => c.classList.toggle('active', i === idx));
+  document.querySelectorAll('.day-card').forEach((c,i) => c.classList.toggle('active', i === idx));
   const day = weekMenu[idx].row;
   menuCard.classList.remove('hidden');
-  const formattedDate = new Date(day.date).toLocaleDateString('cs-CZ', { day:'2-digit', month:'2-digit' });
-  menuDayTitle.textContent = `${day.dayName} (${formattedDate})`;
+  menuDayTitle.textContent = `${day.dayName} (${new Date(day.date).toLocaleDateString('cs-CZ',{day:'2-digit',month:'2-digit'})})`;
   menuPolevka.textContent = day.polevka || '–';
   menuJidlo1.textContent = day.jidlo1 || '–';
   menuJidlo2.textContent = day.jidlo2 || '–';
-  menuTypeSelect.value = 'Celé menu';
-  selectMainLabel.classList.remove('hidden');
-  portionCount.value = 1;
 }
-
-// --- volba typu menu ---
-menuTypeSelect.addEventListener('change', () => {
-  const t = menuTypeSelect.value;
-  if (['Celé menu','Poloviční menu','Hlavní jídlo','Poloviční hlavní jídlo'].includes(t))
-    selectMainLabel.classList.remove('hidden');
-  else
-    selectMainLabel.classList.add('hidden');
-});
-
-// --- doručení ---
-deliverySelect.addEventListener('change', () => {
-  addressLabel.classList.toggle('hidden', deliverySelect.value !== 'Přivézt');
-});
 
 // --- přidání objednávky ---
 addOrderBtn.addEventListener('click', () => {
@@ -203,6 +228,12 @@ addOrderBtn.addEventListener('click', () => {
 // --- vykreslení objednávek ---
 function renderOrders() {
   orderList.innerHTML = '';
+  if (orders.length === 0) {
+    ordersCard.classList.add('hidden');
+    totalPriceEl.textContent = '0';
+    return;
+  }
+  ordersCard.classList.remove('hidden');
   let total = 0;
   orders.forEach((o, i) => {
     total += o.price;
@@ -212,39 +243,39 @@ function renderOrders() {
     const btn = document.createElement('button');
     btn.textContent = 'Smazat';
     btn.className = 'delete';
-    btn.addEventListener('click', () => { orders.splice(i,1); renderOrders(); });
+    btn.addEventListener('click', () => {
+      orders.splice(i, 1);
+      renderOrders();
+    });
     div.appendChild(btn);
     orderList.appendChild(div);
   });
   totalPriceEl.textContent = total;
 }
 
-// --- odeslání objednávky ---
+// --- odeslání ---
 submitOrderBtn.addEventListener('click', async () => {
   if (orders.length === 0) return alert('Žádná položka v objednávce');
-  const name = userName.value.trim();
-  const contact = userContact.value.trim();
+  const name = nameInput.value.trim();
+  const contact = contactInput.value.trim();
   const delivery = deliverySelect.value;
-  const address = (delivery === 'Přivézt') ? addressInput.value.trim() : '';
-
-  if (!name) return alert('Zadejte jméno');
-  if (!contact) return alert('Zadejte kontakt');
-  if (delivery === 'Přivézt' && !address) return alert('Zadejte adresu');
+  const address = delivery === 'Přivézt' ? addressInput.value.trim() : '';
+  if (!name || !contact) return alert('Vyplňte jméno a kontakt!');
+  if (delivery === 'Přivézt' && !address) return alert('Zadejte adresu pro doručení');
 
   const payload = { orders, name, contact, delivery, address };
   try {
     const res = await fetch(APP_SCRIPT_URL, {
       method: 'POST',
-      mode: 'no-cors', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const text = await res.text();
-    alert('Objednávka byla odeslána. Děkujeme!');
+    if (!res.ok) throw new Error('Chyba při odeslání');
+    alert('Objednávka úspěšně odeslána!');
     orders = [];
     renderOrders();
-  } catch (err) {
-    alert('Chyba při odesílání objednávky.');
+  } catch(err) {
+    alert('Chyba při odesílání objednávky');
     console.error(err);
   }
 });
@@ -253,6 +284,7 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
 
 
 
