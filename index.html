@@ -131,7 +131,7 @@ userName.addEventListener('input', () => {
 // --- načtení menu týdne ---
 async function loadWeekMenu() {
   try {
-    const res = await fetch(APP_SCRIPT_URL);
+    const res = await fetch();
     if (!res.ok) throw new Error('Chyba síťového požadavku ' + res.status);
     const data = await res.json();
     weekMenu = data.week.filter((_, i) => i < 5);
@@ -235,6 +235,7 @@ submitOrderBtn.addEventListener('click', async () => {
   try {
     const res = await fetch(APP_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors', // 👈 přidat pro bezpečné odeslání bez CORS chyb
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -252,4 +253,5 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
 
