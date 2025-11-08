@@ -14,7 +14,7 @@
   .day-card.active { background:#2563eb; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
   .menu-card, .order-card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
   label { display:block; margin-top:10px; }
-  select, input[type="number"], input[type="text"] { width:100%; padding:8px; margin-top:4px; border-radius:8px; border:1px solid #ccc; }
+  select, input[type="number"], input[type="text"], input[type="tel"] { width:100%; padding:8px; margin-top:4px; border-radius:8px; border:1px solid #ccc; }
   button { margin-top:12px; padding:12px 20px; border:none; border-radius:12px; background:#2563eb; color:#fff; font-size:16px; cursor:pointer; transition: background 0.2s; }
   button:hover { background:#1e4bb8; }
   button.delete { background:#ff4d4f; margin-left:10px; }
@@ -59,16 +59,16 @@
     </div>
   </div>
 
-  <div class="order-card" id="ordersCard">
+  <div class="order-card hidden" id="ordersCard">
     <h3>Finální objednávka</h3>
     <div id="orderList"></div>
     <p><strong>Celkem:</strong> <span id="totalPrice">0</span> Kč</p>
 
     <label>Jméno:
-      <input type="text" id="userName" placeholder="Vaše jméno">
+      <input type="text" id="userName" placeholder="Vaše jméno" autocomplete="name">
     </label>
-    <label>Kontakt (např. e-mail nebo telefon):
-      <input type="text" id="userContact" placeholder="Kontakt">
+    <label>Kontakt (telefon nebo e-mail):
+      <input type="tel" id="userContact" placeholder="Telefon nebo e-mail" autocomplete="tel">
     </label>
     <label>Doručení:
       <select id="deliverySelect">
@@ -77,7 +77,7 @@
       </select>
     </label>
     <label id="addressLabel" class="hidden">Adresa:
-      <input type="text" id="addressInput" placeholder="Ulice, číslo, město">
+      <input type="text" id="addressInput" placeholder="Ulice, číslo, město" autocomplete="street-address">
     </label>
 
     <button id="submitOrderBtn">Odeslat objednávku</button>
@@ -99,7 +99,6 @@ let priceList = {
 let activeDayIndex = null;
 let orders = [];
 
-// --- prvky ---
 const daysContainer = document.getElementById('daysContainer');
 const menuCard = document.getElementById('menuCard');
 const menuDayTitle = document.getElementById('menuDayTitle');
@@ -114,63 +113,36 @@ const orderList = document.getElementById('orderList');
 const totalPriceEl = document.getElementById('totalPrice');
 const submitOrderBtn = document.getElementById('submitOrderBtn');
 const ordersCard = document.getElementById('ordersCard');
+const userName = document.getElementById('userName');
+const userContact = document.getElementById('userContact');
+const deliverySelect = document.getElementById('deliverySelect');
+const addressLabel = document.getElementById('addressLabel');
+const addressInput = document.getElementById('addressInput');
 
-// --- finální karta (jméno, kontakt, doručení) ---
-const deliverySelect = document.createElement('select');
-deliverySelect.innerHTML = `
-  <option value="Vyzvednu">Vyzvednu</option>
-  <option value="Přivézt">Přivézt</option>
-`;
-const addressLabel = document.createElement('label');
-addressLabel.textContent = 'Adresa:';
-const addressInput = document.createElement('input');
-addressInput.type = 'text';
-addressInput.id = 'addressInput';
-addressInput.autocomplete = 'street-address';
-addressInput.placeholder = 'Ulice, číslo, město';
-addressLabel.appendChild(addressInput);
-
-const nameLabel = document.createElement('label');
-nameLabel.textContent = 'Jméno:';
-const nameInput = document.createElement('input');
-nameInput.type = 'text';
-nameInput.id = 'nameInput';
-nameInput.autocomplete = 'name';
-nameLabel.appendChild(nameInput);
-
-const contactLabel = document.createElement('label');
-contactLabel.textContent = 'Kontakt:';
-const contactInput = document.createElement('input');
-contactInput.type = 'tel';
-contactInput.id = 'contactInput';
-contactInput.autocomplete = 'tel';
-contactLabel.appendChild(contactInput);
-
-// Přidat do finální karty
-ordersCard.insertBefore(nameLabel, submitOrderBtn);
-ordersCard.insertBefore(contactLabel, submitOrderBtn);
-ordersCard.insertBefore(deliverySelect, submitOrderBtn);
-ordersCard.insertBefore(addressLabel, submitOrderBtn);
-
-// --- načtení uložených údajů ---
-nameInput.value = localStorage.getItem('name') || '';
-contactInput.value = localStorage.getItem('contact') || '';
-addressInput.value = localStorage.getItem('address') || '';
+// načíst uložené údaje z localStorage
+userName.value = localStorage.getItem('userName') || '';
+userContact.value = localStorage.getItem('userContact') || '';
 deliverySelect.value = localStorage.getItem('delivery') || 'Vyzvednu';
+addressInput.value = localStorage.getItem('address') || '';
 menuTypeSelect.value = localStorage.getItem('menuType') || 'Celé menu';
 
-// --- sledování změn a uložení ---
-[nameInput, contactInput, addressInput, deliverySelect, menuTypeSelect].forEach(el => {
+// uložit do localStorage při změně
+[userName, userContact, deliverySelect, addressInput, menuTypeSelect].forEach(el => {
   el.addEventListener('change', () => {
-    localStorage.setItem('name', nameInput.value);
-    localStorage.setItem('contact', contactInput.value);
-    localStorage.setItem('address', addressInput.value);
+    localStorage.setItem('userName', userName.value);
+    localStorage.setItem('userContact', userContact.value);
     localStorage.setItem('delivery', deliverySelect.value);
+    localStorage.setItem('address', addressInput.value);
     localStorage.setItem('menuType', menuTypeSelect.value);
   });
 });
 
-// --- načtení menu týdne ---
+// skrývání adresy podle doručení
+deliverySelect.addEventListener('change', () => {
+  addressLabel.classList.toggle('hidden', deliverySelect.value !== 'Přivézt');
+});
+
+// načtení menu týdne
 async function loadWeekMenu() {
   daysContainer.innerHTML = '<p>Načítám jídelníček…</p>';
   try {
@@ -185,7 +157,7 @@ async function loadWeekMenu() {
   }
 }
 
-// --- vykreslení dnů ---
+// vykreslení dnů
 function renderDayCards() {
   daysContainer.innerHTML = '';
   weekMenu.forEach((item, idx) => {
@@ -193,14 +165,14 @@ function renderDayCards() {
     const div = document.createElement('div');
     div.className = 'day-card';
     const date = new Date(day.date);
-    const dateStr = `${date.getDate().toString().padStart(2,'0')}.${(date.getMonth()+1).toString().padStart(2,'0')}`;
+    const dateStr = `${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}`;
     div.textContent = `${day.dayName} (${dateStr})`;
     div.addEventListener('click', () => selectDay(idx));
     daysContainer.appendChild(div);
   });
 }
 
-// --- výběr dne ---
+// výběr dne
 function selectDay(idx) {
   activeDayIndex = idx;
   document.querySelectorAll('.day-card').forEach((c,i) => c.classList.toggle('active', i === idx));
@@ -212,20 +184,19 @@ function selectDay(idx) {
   menuJidlo2.textContent = day.jidlo2 || '–';
 }
 
-// --- přidání objednávky ---
+// přidání do objednávky
 addOrderBtn.addEventListener('click', () => {
   if (activeDayIndex === null) return alert('Vyberte den!');
   const day = weekMenu[activeDayIndex].row;
   const type = menuTypeSelect.value;
   const mainChoice = selectMain.value;
   const qty = parseInt(portionCount.value, 10) || 1;
-  const basePrice = priceList[type] || 0;
-  const price = basePrice * qty;
+  const price = (priceList[type] || 0) * qty;
   orders.push({ day: day.dayName, date: day.date, type, mainChoice, qty, price });
   renderOrders();
 });
 
-// --- vykreslení objednávek ---
+// vykreslení objednávek
 function renderOrders() {
   orderList.innerHTML = '';
   if (orders.length === 0) {
@@ -253,11 +224,11 @@ function renderOrders() {
   totalPriceEl.textContent = total;
 }
 
-// --- odeslání ---
+// odeslání
 submitOrderBtn.addEventListener('click', async () => {
   if (orders.length === 0) return alert('Žádná položka v objednávce');
-  const name = nameInput.value.trim();
-  const contact = contactInput.value.trim();
+  const name = userName.value.trim();
+  const contact = userContact.value.trim();
   const delivery = deliverySelect.value;
   const address = delivery === 'Přivézt' ? addressInput.value.trim() : '';
   if (!name || !contact) return alert('Vyplňte jméno a kontakt!');
@@ -284,10 +255,3 @@ loadWeekMenu();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
