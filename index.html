@@ -1,305 +1,238 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Objednávky jídelny</title>
 <style>
-  body{font-family:Inter,system-ui,Arial;background:#f4f6fb;margin:0;padding:20px;display:flex;justify-content:center}
-  .wrap{width:100%;max-width:980px}
-  h1{text-align:center;margin:6px 0 18px}
-  .days{display:flex;gap:10px;margin-bottom:18px}
-  .day-card{flex:1;background:#fff;border-radius:12px;padding:12px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:0.18s}
-  .day-card:hover{transform:translateY(-4px)}
-  .day-card.active{background:#2563eb;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,0.12)}
-  .card{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-  label{display:block;margin-top:10px}
-  select,input[type="number"],input[type="text"]{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px}
-  .row{display:flex;gap:10px}
-  .row > *{flex:1}
-  button{margin-top:12px;padding:10px 14px;border-radius:10px;border:none;background:#2563eb;color:#fff;cursor:pointer}
-  button.small{padding:6px 10px;border-radius:8px;font-size:14px}
-  .order-item{display:flex;justify-content:space-between;align-items:center;background:#f7fbff;padding:10px;border-radius:8px;margin-top:8px}
-  .order-item .meta{font-size:14px}
-  .muted{color:#666;font-size:13px}
+  body { font-family: Arial, sans-serif; background: #f4f5f7; margin:0; padding:20px; display:flex; justify-content:center;}
+  .container { max-width:900px; width:100%; }
+  .days { display:flex; gap:10px; margin-bottom:20px; }
+  .day-card { flex:1; padding:12px; background:#fff; border-radius:12px; text‑align:center; cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08); transition: transform 0.2s, background 0.2s; }
+  .day-card:hover { transform: translateY(-2px); background:#e8f0ff; }
+  .day-card.active { background:#2563eb; color:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+  .menu-card, .order-card { background:#fff; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+  label { display:block; margin-top:10px; }
+  select, input[type="number"], input[type="text"] { width:100%; padding:8px; margin-top:4px; border-radius:8px; border:1px solid #ccc; }
+  button { margin-top:12px; padding:12px 20px; border:none; border-radius:12px; background:#2563eb; color:#fff; font-size:16px; cursor:pointer; transition: background 0.2s; }
+  button:hover { background:#1e4bb8; }
+  button.delete { background:#ff4d4f; margin-left:10px; }
+  .order-item { background:#f9fbff; padding:10px; border-radius:8px; margin-top:8px; display:flex; justify-content:space-between; align-items:center; }
+  .hidden { display:none; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="container">
   <h1>Jídelna — objednávky</h1>
 
-  <div id="days" class="days"></div>
+  <div class="days" id="daysContainer"></div>
 
-  <div id="menuCard" class="card" style="display:none">
-    <h3 id="menuTitle">Jídelníček</h3>
-    <div id="menuItems" class="muted"></div>
-
-    <label>Typ menu:
-      <select id="menuType">
-        <option>Celé menu</option>
-        <option>Poloviční menu</option>
-        <option>Půl+Půl menu</option>
-        <option>Hlavní jídlo</option>
-        <option>Poloviční hlavní jídlo</option>
-        <option>Polévka</option>
-      </select>
-    </label>
-
-    <label id="mainChoiceLabel" style="display:none">Vyber hlavní jídlo:
-      <select id="mainChoice">
-        <option value="jidlo1">Jídlo 1</option>
-        <option value="jidlo2">Jídlo 2</option>
-      </select>
-    </label>
-
-    <div class="row">
-      <label style="flex:0 0 160px">Počet porcí:
-        <input id="portion" type="number" min="1" value="1">
-      </label>
-      <div style="flex:1"></div>
+  <div class="menu-card hidden" id="menuCard">
+    <h3 id="menuDayTitle"></h3>
+    <div id="menuContent">
+      <p><strong>Polévka:</strong> <span id="menuPolevka"></span></p>
+      <p><strong>Jídlo 1:</strong> <span id="menuJidlo1"></span></p>
+      <p><strong>Jídlo 2:</strong> <span id="menuJidlo2"></span></p>
     </div>
-
-    <button id="addToCart">Přidat do objednávky</button>
+    <div id="menuSelection">
+      <label>Typ menu:
+        <select id="menuTypeSelect">
+          <option value="Celé menu">Celé menu</option>
+          <option value="Poloviční menu">Poloviční menu</option>
+          <option value="Půl+Půl menu">Půl+Půl menu</option>
+          <option value="Hlavní jídlo">Hlavní jídlo</option>
+          <option value="Poloviční hlavní jídlo">Poloviční hlavní jídlo</option>
+          <option value="Polévka">Polévka</option>
+        </select>
+      </label>
+      <label id="selectMainLabel" class="hidden">Vyber hlavní jídlo:
+        <select id="selectMain">
+          <option value="jidlo1">Jídlo 1</option>
+          <option value="jidlo2">Jídlo 2</option>
+        </select>
+      </label>
+      <label>Počet porcí:
+        <input type="number" id="portionCount" min="1" value="1">
+      </label>
+      <label>Doručení:
+        <select id="deliverySelect">
+          <option value="Vyzvednu">Vyzvednu</option>
+          <option value="Přivézt">Přivézt</option>
+        </select>
+      </label>
+      <label id="addressLabel" class="hidden">Adresa:
+        <input type="text" id="addressInput" placeholder="Ulice, číslo, město">
+      </label>
+      <button id="addOrderBtn">Přidat do objednávky</button>
+    </div>
   </div>
 
-  <div id="ordersCard" class="card">
-    <h3>Finální objednávka</h3>
-
-    <label>Jméno:
-      <input id="custName" type="text" placeholder="Jméno (bude uloženo do prohlížeče)">
-    </label>
-
-    <label>Kontakt (email nebo telefon):
-      <input id="custContact" type="text" placeholder="E-mail nebo telefon">
-    </label>
-
-    <label>Doručení:
-      <select id="finalDelivery">
-        <option value="Vyzvednu">Vyzvednu</option>
-        <option value="Přivézt">Přivézt</option>
-      </select>
-    </label>
-
-    <label id="addrLabel" style="display:none">Adresa pro doručení:
-      <input id="custAddress" type="text" placeholder="Ulice, číslo, město">
-    </label>
-
+  <div class="order-card" id="ordersCard">
+    <h3>Seznam objednávek</h3>
     <div id="orderList"></div>
-
-    <p class="muted">Celkem: <strong id="total">0</strong> Kč</p>
-
-    <button id="sendOrder">Odeslat objednávku</button>
+    <p><strong>Celkem:</strong> <span id="totalPrice">0</span> Kč</p>
+    <button id="submitOrderBtn">Odeslat objednávku</button>
   </div>
+
 </div>
 
 <script>
-/* ---------- UPRAVIT: vlož svůj nasazený Web App URL (Apps Script) ---------- */
-const APPS_SCRIPT_GET_URL = 'https://script.google.com/macros/s/AKfycbwsLo9ODVT6yd7ZuyznnbafAOyhICrT9Uwrf1esU8FdOsY2tAtbtQCFop1xCp9OV4Yx/exec';
-const APPS_SCRIPT_POST_URL = 'https://script.google.com/macros/s/AKfycbwsLo9ODVT6yd7ZuyznnbafAOyhICrT9Uwrf1esU8FdOsY2tAtbtQCFop1xCp9OV4Yx/exec'; // <- po nasazení stejný jako GET nebo nový web app URL
+const APP_SCRIPT_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjJ9fj0-9c85IDKw_8ow3XkONcRAFWDCdBmyC5cUuCliOAfAhzDL36XncCTjxZ6mqnJac6nOR0MKZze7aICYDYkWbGHifp50c7HaMPcWj1xB5SUtdQCYzumn_Lv3zqwPI8hoknO5_ENW0TivOVU82oqRjktXT_SCmoCb56EpL809kbnmcUw0ZVrrnbXZ7WA3PvB5deVwvuW3H5RRv-YLtgIrMlZ7iZ7TCdMMkr6IAQYFAUXnsEIxTLdJsw3Jrfww_ZsyXA6naLW1DjhhHrRdCxG-rNIOQ&lib=M8RSYmDm7iYILavaBqKQXX_LnOro48G--';
 
-let week = [];    // načtená data week: [{row:{date,dayName,polevka,jidlo1,jidlo2}}]
-let ceny = {};    // map typMenu -> cena
-let cart = [];    // seznam položek
-let activeIndex = null;
+let weekMenu = [];
+let priceList = {
+  'Polévka': 40,
+  'Hlavní jídlo': 135,
+  'Poloviční menu': 115,
+  'Celé menu': 155,
+  'Poloviční hlavní jídlo': 115,
+  'Půl+Půl menu': 155
+};
+let activeDayIndex = null;
+let orders = [];
 
-/* --- načti data (menu + ceny) --- */
-async function init() {
+const daysContainer = document.getElementById('daysContainer');
+const menuCard = document.getElementById('menuCard');
+const menuDayTitle = document.getElementById('menuDayTitle');
+const menuPolevka = document.getElementById('menuPolevka');
+const menuJidlo1 = document.getElementById('menuJidlo1');
+const menuJidlo2 = document.getElementById('menuJidlo2');
+const menuTypeSelect = document.getElementById('menuTypeSelect');
+const selectMainLabel = document.getElementById('selectMainLabel');
+const selectMain = document.getElementById('selectMain');
+const portionCount = document.getElementById('portionCount');
+const deliverySelect = document.getElementById('deliverySelect');
+const addressLabel = document.getElementById('addressLabel');
+const addressInput = document.getElementById('addressInput');
+const addOrderBtn = document.getElementById('addOrderBtn');
+const orderList = document.getElementById('orderList');
+const totalPriceEl = document.getElementById('totalPrice');
+const submitOrderBtn = document.getElementById('submitOrderBtn');
+
+// Načíst menu týdne
+async function loadWeekMenu() {
   try {
-    const res = await fetch(APPS_SCRIPT_GET_URL);
-    if (!res.ok) throw new Error('Chyba při načítání dat: ' + res.status);
+    const res = await fetch(APP_SCRIPT_URL);
+    if (!res.ok) throw new Error('Chyba síťového požadavku ' + res.status);
     const data = await res.json();
-    week = (data.week || []).filter((_,i)=>i<5); // Po–Pá
-    (data.ceny || []).forEach(c => ceny[c.typMenu] = Number(c.cena) || 0);
-    // fallback ceny (pokud nejsou v listu)
-    if (!ceny['Polévka']) ceny['Polévka']=40;
-    if (!ceny['Hlavní jídlo']) ceny['Hlavní jídlo']=135;
-    if (!ceny['Poloviční menu']) ceny['Poloviční menu']=115;
-    if (!ceny['Celé menu']) ceny['Celé menu']=155;
-    if (!ceny['Poloviční hlavní jídlo']) ceny['Poloviční hlavní jídlo']=115;
-    if (!ceny['Půl+Půl menu']) ceny['Půl+Půl menu']=155;
-
-    renderDays();
-    loadSavedCustomer();
-  } catch (err) {
-    console.error(err);
-    alert('Chyba při načítání menu. Zkontroluj APPS_SCRIPT_GET_URL a deploy.');
+    weekMenu = data.week.filter((_, i) => i < 5); // pondělí–pátek
+    renderDayCards();
+  } catch(err) {
+    console.error('Chyba při načítání menu týdne:', err);
   }
 }
 
-/* --- render karet dnů --- */
-function renderDays(){
-  const daysEl = document.getElementById('days');
-  daysEl.innerHTML = '';
-  week.forEach((w, i) => {
-    const d = w.row;
-    const dd = new Date(d.date);
-    const ddFmt = `${String(dd.getDate()).padStart(2,'0')}.${String(dd.getMonth()+1).padStart(2,'0')}.`;
+// Vykreslení karet dnů
+function renderDayCards() {
+  daysContainer.innerHTML = '';
+  weekMenu.forEach((item, idx) => {
+    const day = item.row;
     const div = document.createElement('div');
     div.className = 'day-card';
-    div.innerHTML = `<div>${d.dayName}</div><div class="muted">${ddFmt}</div>`;
-    div.addEventListener('click', ()=> selectDay(i));
-    daysEl.appendChild(div);
+    const date = new Date(day.date);
+    div.textContent = `${day.dayName} (${date.toLocaleDateString('cs-CZ')})`;
+    div.addEventListener('click', () => {
+      selectDay(idx);
+    });
+    daysContainer.appendChild(div);
   });
 }
 
-/* --- vyber den --- */
-function selectDay(idx){
-  activeIndex = idx;
-  document.querySelectorAll('.day-card').forEach((c,i)=>c.classList.toggle('active', i===idx));
-  const d = week[idx].row;
-  document.getElementById('menuCard').style.display = 'block';
-  document.getElementById('menuTitle').textContent = `${d.dayName} — ${String(new Date(d.date).getDate()).padStart(2,'0')}.${String(new Date(d.date).getMonth()+1).padStart(2,'0')}.`;
-  document.getElementById('menuItems').innerHTML = `<div><strong>Polévka:</strong> ${d.polevka||'–'}</div>
-    <div><strong>Jídlo 1:</strong> ${d.jidlo1||'–'}</div>
-    <div><strong>Jídlo 2:</strong> ${d.jidlo2||'–'}</div>`;
-  // výchozí hodnoty
-  document.getElementById('menuType').value = 'Celé menu';
-  document.getElementById('mainChoiceLabel')?.style.display = 'block';
-  document.getElementById('portion').value = 1;
-  updateMainChoiceVisibility();
-  updateTotal();
+// Vybrání dne
+function selectDay(idx) {
+  activeDayIndex = idx;
+  const cards = document.querySelectorAll('.day-card');
+  cards.forEach((c,i) => c.classList.toggle('active', i === idx));
+  const day = weekMenu[idx].row;
+  menuCard.classList.remove('hidden');
+  menuDayTitle.textContent = `${day.dayName} (${new Date(day.date).toLocaleDateString('cs-CZ')})`;
+  menuPolevka.textContent = day.polevka || '–';
+  menuJidlo1.textContent = day.jidlo1 || '–';
+  menuJidlo2.textContent = day.jidlo2 || '–';
+  // nastavit výchozí volby
+  menuTypeSelect.value = 'Celé menu';
+  selectMainLabel.classList.remove('hidden');
+  portionCount.value = 1;
+  deliverySelect.value = 'Vyzvednu';
+  addressLabel.classList.add('hidden');
 }
 
-/* --- zobrazit volbu hlavního jídla jen pro vybrané typy --- */
-document.getElementById('menuType').addEventListener('change', updateMainChoiceVisibility);
-function updateMainChoiceVisibility(){
-  const t = document.getElementById('menuType').value;
-  const label = document.getElementById('mainChoiceLabel');
+// Zobrazit/skrýt volbu hlavního jídla
+menuTypeSelect.addEventListener('change', () => {
+  const t = menuTypeSelect.value;
   if (['Celé menu','Poloviční menu','Hlavní jídlo','Poloviční hlavní jídlo'].includes(t)) {
-    label.style.display = 'block';
+    selectMainLabel.classList.remove('hidden');
   } else {
-    label.style.display = 'none';
+    selectMainLabel.classList.add('hidden');
   }
-}
-
-/* --- přidat do košíku --- */
-document.getElementById('addToCart').addEventListener('click', ()=>{
-  if (activeIndex === null) return alert('Vyberte den nejprve.');
-  const d = week[activeIndex].row;
-  const type = document.getElementById('menuType').value;
-  const mainChoice = document.getElementById('mainChoice').value; // 'jidlo1'|'jidlo2'
-  const portions = parseInt(document.getElementById('portion').value,10) || 1;
-
-  // které jídlo jména
-  const jidlo1Name = d.jidlo1 || '';
-  const jidlo2Name = d.jidlo2 || '';
-
-  // price lookup dle typu
-  const priceSingle = ceny[type] !== undefined ? ceny[type] : 0;
-  const price = priceSingle * portions;
-
-  // pokud Půl+Půl, automaticky obě jídla - mainChoice nepoužijeme
-  cart.push({
-    dayName: d.dayName,
-    dateISO: d.date,
-    type: type,
-    mainChoice: (type === 'Půl+Půl menu') ? 'both' : mainChoice,
-    jidlo1Name: jidlo1Name,
-    jidlo2Name: jidlo2Name,
-    portions: portions,
-    priceSingle: priceSingle,
-    priceTotal: price
-  });
-
-  renderCart();
 });
 
-/* --- render košíku --- */
-function renderCart(){
-  const list = document.getElementById('orderList');
-  list.innerHTML = '';
+// Zobrazit/skrýt pole pro adresu
+deliverySelect.addEventListener('change', () => {
+  addressLabel.classList.toggle('hidden', deliverySelect.value !== 'Přivézt');
+});
+
+// Přidání položky do objednávky
+addOrderBtn.addEventListener('click', () => {
+  if (activeDayIndex === null) {
+    alert('Vyberte den!');
+    return;
+  }
+  const day = weekMenu[activeDayIndex].row;
+  const type = menuTypeSelect.value;
+  const mainChoice = selectMain.value;
+  const qty = parseInt(portionCount.value, 10) || 1;
+  const basePrice = priceList[type] || 0;
+  const price = basePrice * qty;
+  orders.push({ day: day.dayName, date: day.date, type, mainChoice, qty, price });
+  renderOrders();
+});
+
+// Vykreslení seznamu objednávek + součet
+function renderOrders() {
+  orderList.innerHTML = '';
   let total = 0;
-  cart.forEach((it, idx) => {
-    total += it.priceTotal;
+  orders.forEach((o, i) => {
+    total += o.price;
     const div = document.createElement('div');
     div.className = 'order-item';
-    const mainText = (it.mainChoice === 'both') ? `${it.jidlo1Name} + ${it.jidlo2Name}` : (it.mainChoice === 'jidlo1' ? it.jidlo1Name : it.jidlo2Name);
-    div.innerHTML = `<div class="meta"><strong>${it.dayName}</strong> · ${it.type} · ${mainText ? mainText : ''} · x${it.portions}</div>`;
-    const right = document.createElement('div');
-    right.innerHTML = `<div class="muted">${it.priceTotal} Kč</div>`;
-    const del = document.createElement('button');
-    del.className = 'small';
-    del.textContent = 'Smazat';
-    del.addEventListener('click', ()=> { cart.splice(idx,1); renderCart(); });
-    right.appendChild(del);
-    div.appendChild(right);
-    list.appendChild(div);
-  });
-  document.getElementById('total').textContent = total;
-  updateTotal();
-}
-
-/* --- doručení pole zobrazení --- */
-document.getElementById('finalDelivery').addEventListener('change', ()=>{
-  const v = document.getElementById('finalDelivery').value;
-  document.getElementById('addrLabel').style.display = (v === 'Přivézt') ? 'block' : 'none';
-});
-
-/* --- uložit a načíst jméno a kontakt do localStorage --- */
-function loadSavedCustomer(){
-  document.getElementById('custName').value = localStorage.getItem('custName') || '';
-  document.getElementById('custContact').value = localStorage.getItem('custContact') || '';
-}
-document.getElementById('custName').addEventListener('input', (e)=> localStorage.setItem('custName', e.target.value));
-document.getElementById('custContact').addEventListener('input', (e)=> localStorage.setItem('custContact', e.target.value));
-
-/* --- odeslat objednávku na Apps Script --- */
-document.getElementById('sendOrder').addEventListener('click', async ()=>{
-  if (cart.length === 0) return alert('Košík je prázdný.');
-  const name = document.getElementById('custName').value.trim();
-  if (!name) return alert('Zadejte jméno.');
-  const contact = document.getElementById('custContact').value.trim();
-  const delivery = document.getElementById('finalDelivery').value;
-  const address = (delivery === 'Přivézt') ? document.getElementById('custAddress').value.trim() : '';
-
-  if (delivery === 'Přivézt' && !address) return alert('Zadejte adresu pro doručení.');
-
-  // připrav payload pro server
-  // doplníme textová jména jídel do objektu, aby server přesně věděl, co zapsat
-  const ordersForServer = cart.map(it => {
-    return {
-      day: it.dayName,
-      date: it.dateISO,
-      type: it.type,
-      mainChoice: it.mainChoice,
-      jidlo1Name: it.jidlo1Name,
-      jidlo2Name: it.jidlo2Name,
-      portions: it.portions,
-      price: it.priceTotal
-    };
-  });
-
-  const payload = {
-    name: name,
-    contact: contact,
-    delivery: delivery,
-    address: address,
-    orders: ordersForServer
-  };
-
-  try {
-    const res = await fetch(APPS_SCRIPT_POST_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    div.innerHTML = `<span>${o.day} | ${o.type}${o.mainChoice ? ' – ' + o.mainChoice : ''} x${o.qty} = ${o.price} Kč</span>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'Smazat';
+    btn.className = 'delete';
+    btn.addEventListener('click', () => {
+      orders.splice(i, 1);
+      renderOrders();
     });
-    const data = await res.json();
-    if (data && data.result === 'ok') {
-      alert('Objednávka odeslána — děkujeme!');
-      cart = [];
-      renderCart();
-    } else {
-      console.error('Server vrátil:', data);
-      alert('Chyba při odesílání. Zkontroluj konzoli.');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Chyba při odesílání objednávky: ' + err.message);
+    div.appendChild(btn);
+    orderList.appendChild(div);
+  });
+  totalPriceEl.textContent = total;
+}
+
+// Odeslání objednávky (ukázka)
+submitOrderBtn.addEventListener('click', () => {
+  if (orders.length === 0) {
+    alert('Žádná položka v objednávce');
+    return;
   }
+  const delivery = deliverySelect.value;
+  const address = delivery === 'Přivézt' ? addressInput.value.trim() : '';
+  if (delivery === 'Přivézt' && address === '') {
+    alert('Zadejte adresu pro doručení');
+    return;
+  }
+  const payload = { orders, delivery, address };
+  console.log('Objednávka odeslána:', payload);
+  alert('Objednávka odeslána (simulace)');
+  // zde by šel fetch POST na Apps Script pro uložení
+  orders = [];
+  renderOrders();
 });
 
-/* --- inicializace --- */
-init();
+loadWeekMenu();
 </script>
+
 </body>
 </html>
