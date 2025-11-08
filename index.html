@@ -240,18 +240,14 @@ submitOrderBtn.addEventListener('click', async () => {
   const payload = { orders, name, contact, delivery, address };
 
   try {
-    const res = await fetch(APP_SCRIPT_URL, {
+    await fetch(APP_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    // pro HtmlService vracíme text, takže musíme parsovat
-    const text = await res.text();
-    const data = JSON.parse(text);
-
-    if (data.error) throw new Error(data.error);
+    // alert ihned po fetch, žádné parsování
     alert('Objednávka úspěšně odeslána!');
 
     // vyprázdnit objednávky a aktualizovat kartu
@@ -267,6 +263,7 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
 
 
 
