@@ -85,7 +85,7 @@
 </div>
 
 <script>
-const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwLxA1pE7YJYm5CQSwewibHLFqT2o87viLmbJzzm0yyPi8p9sfyPlkyMumqbo7oCzz3/exec';
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySC1mGc09a2VgS8vQPDqjBW7qVNYp7WNLTaZX31aYsJfwq0B88PmydebaZa9TMiGIm/exec';
 
 let weekMenu = [];
 let priceList = {
@@ -242,6 +242,7 @@ submitOrderBtn.addEventListener('click', async () => {
   try {
     const res = await fetch(APP_SCRIPT_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -266,6 +267,7 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
 
 
 
