@@ -131,7 +131,7 @@ userName.addEventListener('input', () => {
 // --- načtení menu týdne ---
 async function loadWeekMenu() {
   try {
-    const res = await fetch();
+    const res = await fetch(APP_SCRIPT_URL);
     if (!res.ok) throw new Error('Chyba síťového požadavku ' + res.status);
     const data = await res.json();
     weekMenu = data.week.filter((_, i) => i < 5);
@@ -252,6 +252,7 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
 
 
 
