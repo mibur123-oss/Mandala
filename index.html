@@ -287,6 +287,16 @@ document.getElementById('addOrderBtn').addEventListener('click',()=>{
         p=(priceList[t]||0)*q;
   orders.push({day:d.dayName,date:d.date,type:t,mainChoice:m,qty:q,price:p});
   renderOrders();
+}
+
+menuTypeSelect.addEventListener('change', () => {
+  const type = menuTypeSelect.value;
+  // zobrazíme volbu hlavního jídla jen pokud je relevantní
+  if (type === 'Půl+Půl menu' || type === 'Poloviční hlavní jídlo') {
+    selectMainLabel.classList.remove('hidden');
+  } else {
+    selectMainLabel.classList.add('hidden');
+  }
 });
 
 /* ======= vykreslení objednávek ======= */
@@ -337,3 +347,4 @@ loadWeekMenu();
 </script>
 </body>
 </html>
+
